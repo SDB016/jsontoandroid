@@ -7,9 +7,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -24,14 +24,14 @@ import java.util.concurrent.ExecutionException;
 public class MainActivity extends AppCompatActivity {
     String receiveMsg;
     Handler mhandler;
-    TextView textView;
 
     ConnectHttpThread mconnectThread;
+    TextView textView;
 
-    private ArrayList<String>nameList;
-    private ArrayList<String>genderList;
-    private ArrayList<String>banList;
-    private JSONArray jsonArray;
+    private String[] nameList;
+    private String[] genderList;
+    private String[] banList;
+    private String[] jsonArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +39,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textView = findViewById(R.id.textview);
-        nameList = new ArrayList<>();
-        genderList = new ArrayList<>();
-        banList = new ArrayList<>();
 
         mhandler = new Handler();
         mconnectThread = new ConnectHttpThread();
@@ -79,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             //textView.setText(receiveMsg);
                             jsonRead();
+
+                            for(int i =0;i<nameList.length;i++){
+                                textView.setText("이름: " + nameList[i] + " 성별: " + genderList[i] + " 반: " + banList[i]);
+                                Log.d("run","name is "+nameList[i]);
+                                try {
+                                    sleep(3000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
                     });
 
@@ -96,24 +103,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void jsonRead(){
+    private void jsonRead() {
+        int list_cnt;
         try {
-            jsonArray = new JSONArray(receiveMsg);
-            for (int i = 0; i<jsonArray.length();i++){
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                String name = jsonObject.getString("name");
-                String gender = jsonObject.getString("gender");
-                String ban = jsonObject.getString("class");
-                nameList.add(name);
-                genderList.add(gender);
-                banList.add(ban);
-                textView.setText(nameList.toString() + "\n");
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject)parser.parse(receiveMsg);
+            JSONArray jsonArray = (JSONArray)jsonObject.get("result");
+            list_cnt = jsonArray.size();
+            Log.e("main", "list_cnt is "+list_cnt);
+
+            nameList = new String[list_cnt];
+            banList = new String[list_cnt];
+            genderList = new String[list_cnt];
+
+            for (int i = 0; i < list_cnt; i++) {
+                JSONObject tmp = (JSONObject)jsonArray.get(i);
+                nameList[i] = (String)tmp.get("name");
+                genderList[i] = (String)tmp.get("gender");
+                banList[i] = (String)tmp.get("class");
             }
-        } catch (JSONException e) {
+
+        } catch (ParseException e) {
             e.printStackTrace();
         }
-    }
 
+    }
 }
 
 
