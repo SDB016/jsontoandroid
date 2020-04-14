@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.simple.JSONArray;
@@ -26,24 +28,25 @@ public class MainActivity extends AppCompatActivity {
     Handler mhandler;
 
     ConnectHttpThread mconnectThread;
-    TextView textView;
+    ListView listView;
 
     private String[] nameList;
     private String[] genderList;
     private String[] banList;
-    private String[] jsonArray;
+    private String[] userInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView = findViewById(R.id.textview);
+        listView = findViewById(R.id.listView);
 
         mhandler = new Handler();
         mconnectThread = new ConnectHttpThread();
         mconnectThread.start();
     }
+
 
     class ConnectHttpThread extends Thread {
         @Override
@@ -70,22 +73,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                     receiveMsg = buffer.toString();
 
-
                     mhandler.post(new Runnable() {
                         @Override
                         public void run() {
                             //textView.setText(receiveMsg);
                             jsonRead();
-
-                            for(int i =0;i<nameList.length;i++){
-                                textView.setText("이름: " + nameList[i] + " 성별: " + genderList[i] + " 반: " + banList[i]);
-                                Log.d("run","name is "+nameList[i]);
-                                try {
-                                    sleep(3000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                            ArrayAdapter adapter = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1,userInfo);
+                            listView.setAdapter(adapter);
                         }
                     });
 
@@ -94,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -115,12 +109,14 @@ public class MainActivity extends AppCompatActivity {
             nameList = new String[list_cnt];
             banList = new String[list_cnt];
             genderList = new String[list_cnt];
+            userInfo = new String[list_cnt];
 
             for (int i = 0; i < list_cnt; i++) {
                 JSONObject tmp = (JSONObject)jsonArray.get(i);
                 nameList[i] = (String)tmp.get("name");
                 genderList[i] = (String)tmp.get("gender");
                 banList[i] = (String)tmp.get("class");
+                userInfo[i] = (String)tmp.get("name") + ' ' + (String)tmp.get("class") + ' ' + (String)tmp.get("gender");
             }
 
         } catch (ParseException e) {
@@ -129,46 +125,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
